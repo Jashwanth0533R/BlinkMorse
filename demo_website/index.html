@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BlinkMorse – Translate Eye Blinks Into Human Communication</title>
+  <meta name="description" content="An ultra-premium, AI-driven assistive technology translating eye blinks into real-time Morse code communication. Designed for individuals with speech and motor impairments.">
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Style Sheet -->
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  
+  <!-- Libraries (CDNs) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <script src="https://unpkg.com/@studio-freight/lenis@1.0.34/dist/lenis.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <!-- MediaPipe dependencies for Blink Test -->
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
+</head>
+<body>
+
+  <!-- 1. Cinematic Intro (Preloader) -->
+  <div id="preloader">
+    <div class="preloader-bg-grid"></div>
+    <div class="intro-eye-container">
+      <svg class="intro-eye-svg" viewBox="0 0 100 60">
+        <path class="intro-eye-line" d="M 10 30 Q 50 30 90 30" fill="none" stroke="#00E5FF" stroke-width="1.5" stroke-linecap="round" />
+        <path class="intro-eye-lid-upper" d="M 10 30 Q 50 10 90 30" fill="none" stroke="#00E5FF" stroke-width="1.5" stroke-linecap="round" style="opacity: 0;" />
+        <path class="intro-eye-lid-lower" d="M 10 30 Q 50 50 90 30" fill="none" stroke="#00E5FF" stroke-width="1.5" stroke-linecap="round" style="opacity: 0;" />
+        <circle class="intro-eye-pupil" cx="50" cy="30" r="8" fill="none" stroke="#5CE1E6" stroke-width="1.5" style="opacity: 0; filter: drop-shadow(0 0 6px #5CE1E6);" />
+        <circle class="intro-eye-pupil-center" cx="50" cy="30" r="3" fill="#00E5FF" style="opacity: 0; filter: drop-shadow(0 0 4px #00E5FF);" />
+      </svg>
+      <div class="intro-neural-network" id="intro-neural-nodes"></div>
+    </div>
+    
+    <div class="preloader-text-container">
+      <h1 class="preloader-title">BLINKMORSE</h1>
+      <p class="preloader-subtitle">Translate Eye Blinks Into Human Communication</p>
+    </div>
+  </div>
+
+  <!-- Independent Floating Brand Logo -->
+  <div class="floating-logo">
+    <span class="logo-accent">•</span> BlinkMorse
+  </div>
+
+  <!-- Vertical Right Navigation Bar -->
+  <nav class="vertical-navbar">
+    <div class="nav-links-vertical">
+      <a href="#problem" class="nav-link-v" data-label="Problem"><i data-lucide="help-circle"></i></a>
+      <a href="#why-morse" class="nav-link-v" data-label="Philosophy"><i data-lucide="book-open"></i></a>
+      <a href="#solution" class="nav-link-v" data-label="Workflow"><i data-lucide="git-commit"></i></a>
+      <a href="#blink-test" class="nav-link-v" data-label="Live Demo"><i data-lucide="play-circle"></i></a>
+      <a href="#metrics" class="nav-link-v" data-label="Metrics"><i data-lucide="bar-chart-2"></i></a>
+      <a href="#tech-core" class="nav-link-v" data-label="Stack"><i data-lucide="layers"></i></a>
+    </div>
+    <div class="nav-cta-vertical">
+      <a href="#blink-test" class="btn-nav-v magnetic-btn" title="Try Demo"><i data-lucide="camera"></i></a>
+    </div>
+  </nav>
+
+  <!-- Scroll Container for Lenis -->
+  <div id="scroll-wrapper">
+
+    <!-- 2. Hero Section -->
+    <section id="hero" class="fullscreen-section">
+      <div class="grid-overlay"></div>
+      <canvas id="hero-canvas"></canvas>
+      <div class="radial-glow-hero"></div>
+      
+      <!-- Big Wireframe Eye Background -->
+      <div class="hero-eye-wireframe">
+        <svg viewBox="0 0 400 240" preserveAspectRatio="xMidYMid meet">
+          <path class="wire-outer" d="M 40 120 C 120 40, 280 40, 360 120 C 280 200, 120 200, 40 120 Z" fill="none" stroke="rgba(0, 229, 255, 0.08)" stroke-width="1.5" />
+          <circle class="wire-pupil" cx="200" cy="120" r="45" fill="none" stroke="rgba(92, 225, 230, 0.08)" stroke-width="1.5" stroke-dasharray="4 4" />
+          <circle class="wire-iris" cx="200" cy="120" r="22" fill="none" stroke="rgba(0, 229, 255, 0.12)" stroke-width="1" />
+          <!-- Ray scanning lines -->
+          <line x1="200" y1="120" x2="200" y2="30" stroke="rgba(0, 229, 255, 0.06)" stroke-width="1" />
+          <line x1="200" y1="120" x2="200" y2="210" stroke="rgba(0, 229, 255, 0.06)" stroke-width="1" />
+          <line x1="200" y1="120" x2="110" y2="120" stroke="rgba(0, 229, 255, 0.06)" stroke-width="1" />
+          <line x1="200" y1="120" x2="290" y2="120" stroke="rgba(0, 229, 255, 0.06)" stroke-width="1" />
+        </svg>
+      </div>
+
+      <div class="hero-content text-reveal-container">
+        <h1 class="hero-title reveal-text">BlinkMorse</h1>
+        <p class="hero-tagline reveal-text">Translate Eye Blinks Into Human Communication</p>
+        <p class="hero-subtext">Empowering speech-impaired individuals through Computer Vision and Morse Code Intelligence.</p>
+        
+        <div class="hero-buttons">
+          <a href="#blink-test" class="btn btn-primary magnetic-btn">Try Demo</a>
+          <a href="#timeline" class="btn btn-secondary">Research Paper</a>
+          <a href="https://github.com/Jashwanth0533R/BlinkMorse/tree/main" target="_blank" rel="noopener" class="btn btn-tertiary">View GitHub</a>
+        </div>
+      </div>
+      
+      <div class="hero-scroll-indicator">
+        <div class="mouse-icon">
+          <div class="wheel"></div>
+        </div>
+        <span>Scroll to Explore</span>
+      </div>
+    </section>
+
+    <!-- 13. Impact Statement Section (Relocated) -->
+    <section id="impact" class="fullscreen-section">
+      <div class="radial-glow-hero"></div>
+      <div class="impact-eye-wireframe">
+        <svg viewBox="0 0 400 240" preserveAspectRatio="xMidYMid meet">
+          <path class="wire-outer" d="M 40 120 C 120 40, 280 40, 360 120 C 280 200, 120 200, 40 120 Z" fill="none" stroke="rgba(0, 229, 255, 0.04)" stroke-width="1" />
+          <circle class="wire-pupil" cx="200" cy="120" r="60" fill="none" stroke="rgba(92, 225, 230, 0.04)" stroke-width="1" />
+          <circle class="wire-iris" cx="200" cy="120" r="30" fill="none" stroke="rgba(0, 229, 255, 0.05)" stroke-width="0.75" />
+        </svg>
+      </div>
+      <div class="section-container">
+        <div class="impact-statement-content">
+          <p class="impact-line">Giving Voice</p>
+          <p class="impact-line">Through Vision</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. WWDC Transition Wrapper -->
+    <div id="wwdc-wrapper">
+      
+      <!-- 4. Problem Section -->
+      <section id="problem" class="content-section">
+        <div class="section-container">
+          <div class="problem-grid">
+            <div class="problem-left">
+              <h2 class="section-title">Communication Should Never Depend on Speech</h2>
+              <div class="voice-illustration-container">
+                <!-- Looping Animatable SVG Sequence -->
+                <svg class="voice-svg" viewBox="0 0 300 300" id="problem-anim-svg">
+                  <defs>
+                    <linearGradient id="cyan-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stop-color="#00E5FF" stop-opacity="0.9" />
+                      <stop offset="100%" stop-color="#5CE1E6" stop-opacity="0.3" />
+                    </linearGradient>
+                    <filter id="cyan-glow" x="-30%" y="-30%" width="160%" height="160%">
+                      <feGaussianBlur stdDeviation="8" result="blur" />
+                      <feMerge>
+                        <feMergeNode in="blur" />
+                        <feMergeNode in="SourceGraphic" />
+                      </feMerge>
+                    </filter>
+                  </defs>
+                  
+                  <!-- Background grid detail -->
+                  <circle cx="150" cy="150" r="130" fill="none" stroke="rgba(255,255,255,0.015)" stroke-width="1.5" />
+                  <circle cx="150" cy="150" r="100" fill="none" stroke="rgba(255,255,255,0.01)" stroke-width="1" />
+                  
+                  <!-- Speech Icon and waves group -->
+                  <g id="anim-speech-group">
+                    <path id="anim-mic-body" d="M 135 125 A 15 15 0 0 1 165 125 L 165 150 A 15 15 0 0 1 135 150 Z" fill="none" stroke="#FFFFFF" stroke-width="2.5" />
+                    <path id="anim-mic-stand" d="M 125 145 A 25 25 0 0 0 175 145 M 150 170 L 150 185 M 135 185 L 165 185" fill="none" stroke="#FFFFFF" stroke-width="2" />
+                    <path class="vocal-wave v-wave-1" d="M 195 130 A 25 25 0 0 1 195 160" fill="none" stroke="#00E5FF" stroke-width="2.5" stroke-linecap="round" />
+                    <path class="vocal-wave v-wave-2" d="M 207 120 A 40 40 0 0 1 207 170" fill="none" stroke="#5CE1E6" stroke-width="2" stroke-linecap="round" />
+                    <path class="vocal-wave v-wave-3" d="M 219 110 A 55 55 0 0 1 219 180" fill="none" stroke="rgba(0,229,255,0.3)" stroke-width="1.5" stroke-linecap="round" />
+                  </g>
+
+                  <!-- Eye outline draws itself group -->
+                  <g id="anim-eye-group" style="opacity: 0;">
+                    <path id="anim-eye-outline" d="M 80 150 Q 150 95 220 150 Q 150 205 80 150 Z" fill="none" stroke="#00E5FF" stroke-width="2.5" stroke-linecap="round" filter="url(#cyan-glow)" />
+                    <circle id="anim-eye-pupil" cx="150" cy="150" r="22" fill="none" stroke="#5CE1E6" stroke-width="2" />
+                    <circle id="anim-eye-core" cx="150" cy="150" r="9" fill="#00E5FF" />
+                  </g>
+
+                  <!-- Morse Symbols group -->
+                  <g id="anim-morse-group">
+                    <circle class="anim-morse-symbol anim-m-dot" cx="110" cy="85" r="5" fill="#00E5FF" style="opacity: 0;" filter="url(#cyan-glow)" />
+                    <rect class="anim-morse-symbol anim-m-dash" x="165" y="80" width="22" height="6" rx="3" fill="#00E5FF" style="opacity: 0;" filter="url(#cyan-glow)" />
+                    <circle class="anim-morse-symbol anim-m-dot2" cx="205" cy="100" r="5" fill="#00E5FF" style="opacity: 0;" filter="url(#cyan-glow)" />
+                  </g>
+
+                  <!-- Communication Bubble group -->
+                  <g id="anim-bubble-group" style="opacity: 0;">
+                    <rect x="70" y="210" width="160" height="42" rx="21" fill="#0B1120" stroke="#00E5FF" stroke-width="2" filter="url(#cyan-glow)" />
+                    <text x="150" y="235" fill="#FFFFFF" font-family="monospace" font-size="11" font-weight="bold" letter-spacing="2" text-anchor="middle">VOICE ON</text>
+                  </g>
+                </svg>
+              </div>
+            </div>
+            
+            <div class="problem-right">
+              <div class="problem-card">
+                <div class="card-icon"><i data-lucide="activity"></i></div>
+                <h3>ALS Patients</h3>
+                <p>Amyotrophic Lateral Sclerosis deteriorates motor neurons, stripping speech and movement capabilities while cognitive sharpness remains completely untouched.</p>
+              </div>
+              <div class="problem-card">
+                <div class="card-icon"><i data-lucide="lock"></i></div>
+                <h3>Locked-In Syndrome</h3>
+                <p>A profound state of paralysis where only vertical eye movements and blinks are preserved as the final, critical bridge to the outer world.</p>
+              </div>
+              <div class="problem-card">
+                <div class="card-icon"><i data-lucide="message-square-off"></i></div>
+                <h3>Speech Disorders</h3>
+                <p>Aphasia, dysarthria, and vocal trauma can permanently break verbal channels, isolating individuals within their own minds.</p>
+              </div>
+              <div class="problem-card">
+                <div class="card-icon"><i data-lucide="accessibility"></i></div>
+                <h3>Accessibility Challenges</h3>
+                <p>Most assistive software requires complex, expensive eye-gaze tracking cameras or brain implants. We solve this with normal, accessible webcams.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5. Why Morse Section -->
+      <section id="why-morse" class="content-section text-highlight-section">
+        <div class="section-container narrow-container">
+          <div class="why-morse-text">
+            <h2 class="label-accent">THE PHILOSOPHY</h2>
+            <p class="philosophical-pitch char-reveal">
+              Morse code is the ultimate minimum-movement communication system. Because it operates on a simple binary mechanism—dots and dashes—it demands zero complex coordination. Standard virtual keyboards require users to lock gaze or head-track across dozens of keys, leading to severe visual fatigue. With BlinkMorse, a single muscle group becomes a high-performance keyboard. It is elegant, robust, and requires less cognitive overhead than spelling words symbol by symbol.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 6. Workflow Timeline Section -->
+      <section id="solution" class="content-section workflow-timeline-section">
+        <div class="section-container">
+          <div class="section-header text-center">
+            <span class="label-accent">HOW IT WORKS</span>
+            <h2 class="section-title">Workflow Timeline</h2>
+            <p class="section-subtitle">A high-performance pipeline turning ocular dynamics into spoken communication.</p>
+          </div>
+
+          <div class="workflow-timeline">
+            <!-- Step 1 -->
+            <div class="timeline-row-item">
+              <div class="timeline-visual-side">
+                <span class="translucent-bg-num">01</span>
+                <!-- Illustration 1: Face & Eye Grid -->
+                <svg class="timeline-illustration" viewBox="0 0 200 200">
+                  <circle cx="100" cy="100" r="70" fill="none" stroke="rgba(0, 229, 255, 0.15)" stroke-width="1.5" stroke-dasharray="3 6" />
+                  <rect x="50" y="50" width="100" height="100" fill="none" stroke="rgba(0, 229, 255, 0.2)" stroke-width="1.5" />
+                  <path d="M 45 60 L 45 45 L 60 45" fill="none" stroke="#00E5FF" stroke-width="2.5" />
+                  <path d="M 155 60 L 155 45 L 140 45" fill="none" stroke="#00E5FF" stroke-width="2.5" />
+                  <path d="M 45 140 L 45 155 L 60 155" fill="none" stroke="#00E5FF" stroke-width="2.5" />
+                  <path d="M 155 140 L 155 155 L 140 155" fill="none" stroke="#00E5FF" stroke-width="2.5" />
+                  <circle cx="100" cy="85" r="4" fill="#00E5FF" />
+                  <circle cx="80" cy="95" r="3.5" fill="#5CE1E6" />
+                  <circle cx="120" cy="95" r="3.5" fill="#5CE1E6" />
+                  <circle cx="100" cy="120" r="3" fill="#00E5FF" />
+                </svg>
+              </div>
+              <div class="timeline-text-side">
+                <div class="step-num-pill">Stage 01</div>
+                <h3>Face & Eye Detection</h3>
+                <span class="step-tech-tag">OpenCV + dlib</span>
+                <p>The webcam feed streams directly to a browser-based computer vision engine. OpenCV reads the frames, and facial mapping algorithms isolate 68 structural coordinate landmarks, mapping the precise geometric boundaries of the eyelids.</p>
+              </div>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="timeline-row-item">
+              <div class="timeline-visual-side">
+                <span class="translucent-bg-num">02</span>
+                <!-- Illustration 2: SVM Eyelid Classification -->
+                <svg class="timeline-illustration" viewBox="0 0 200 200">
+                  <path d="M 30 140 Q 70 80 100 140 T 170 140" fill="none" stroke="rgba(255, 255, 255, 0.1)" stroke-width="2" />
+                  <path class="timeline-active-wave" d="M 30 140 Q 70 140 90 140 Q 100 140 110 50 Q 120 140 135 140 T 170 140" fill="none" stroke="#00E5FF" stroke-width="2.5" />
+                  <line x1="20" y1="95" x2="180" y2="95" stroke="#FF0055" stroke-width="1.5" stroke-dasharray="4 4" />
+                  <text x="25" y="85" fill="#FF0055" font-family="monospace" font-size="8">THRESHOLD</text>
+                </svg>
+              </div>
+              <div class="timeline-text-side">
+                <div class="step-num-pill">Stage 02</div>
+                <h3>Blink Classification</h3>
+                <span class="step-tech-tag">Linear Support Vector Machine</span>
+                <p>The system computes the Eye Aspect Ratio (EAR) on every frame. Using a pre-trained Linear Support Vector Machine (SVM), the system evaluates eye-state descriptors, accurately categorizing frames as "open" or "closed" while discarding micro-noises.</p>
+              </div>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="timeline-row-item">
+              <div class="timeline-visual-side">
+                <span class="translucent-bg-num">03</span>
+                <!-- Illustration 3: Morse Encoding -->
+                <svg class="timeline-illustration" viewBox="0 0 200 200">
+                  <circle cx="60" cy="100" r="10" fill="#00E5FF" style="filter: drop-shadow(0 0 5px #00E5FF);" />
+                  <rect x="90" y="90" width="50" height="20" rx="10" fill="#00E5FF" style="filter: drop-shadow(0 0 5px #00E5FF);" />
+                  <circle cx="160" cy="100" r="10" fill="#00E5FF" style="filter: drop-shadow(0 0 5px #00E5FF);" />
+                  <line x1="20" y1="130" x2="180" y2="130" stroke="rgba(255,255,255,0.05)" stroke-width="1" />
+                </svg>
+              </div>
+              <div class="timeline-text-side">
+                <div class="step-num-pill">Stage 03</div>
+                <h3>Morse Code Decoding</h3>
+                <span class="step-tech-tag">Duration Tracker</span>
+                <p>The system tracks the exact duration of each closed-eye state. Short blinks are classified as dots (•), and sustained blinks are registered as dashes (—). Spacing intervals are monitored to identify breaks between characters.</p>
+              </div>
+            </div>
+
+            <!-- Step 4 -->
+            <div class="timeline-row-item">
+              <div class="timeline-visual-side">
+                <span class="translucent-bg-num">04</span>
+                <!-- Illustration 4: System Integration -->
+                <svg class="timeline-illustration" viewBox="0 0 200 200">
+                  <circle cx="100" cy="50" r="6" fill="rgba(255,255,255,0.2)" />
+                  <line x1="100" y1="56" x2="60" y2="100" stroke="rgba(255,255,255,0.1)" stroke-width="2" />
+                  <line x1="100" y1="56" x2="140" y2="100" stroke="rgba(255,255,255,0.1)" stroke-width="2" />
+                  <circle cx="60" cy="106" r="8" fill="#00E5FF" />
+                  <circle cx="140" cy="106" r="8" fill="rgba(255,255,255,0.2)" />
+                  <line x1="60" y1="114" x2="40" y2="150" stroke="rgba(255,255,255,0.1)" stroke-width="2" />
+                  <line x1="60" y1="114" x2="80" y2="150" stroke="rgba(255,255,255,0.1)" stroke-width="2" />
+                  <circle cx="40" cy="158" r="10" fill="#5CE1E6" />
+                  <circle cx="80" cy="158" r="10" fill="#00E5FF" />
+                </svg>
+              </div>
+              <div class="timeline-text-side">
+                <div class="step-num-pill">Stage 04</div>
+                <h3>Input & System Integration</h3>
+                <span class="step-tech-tag">Dictionary Module</span>
+                <p>Character buffers pass instantly to the translation dictionary. Morse patterns are translated to text in real-time, matching sequences against standard alphanumeric profiles to form coherent spelling lines.</p>
+              </div>
+            </div>
+
+            <!-- Step 5 -->
+            <div class="timeline-row-item">
+              <div class="timeline-visual-side">
+                <span class="translucent-bg-num">05</span>
+                <!-- Illustration 5: Text Output Speech -->
+                <svg class="timeline-illustration" viewBox="0 0 200 200">
+                  <circle cx="100" cy="100" r="30" fill="rgba(0,229,255,0.1)" />
+                  <circle cx="100" cy="100" r="45" fill="none" stroke="#00E5FF" stroke-width="1.5" stroke-dasharray="4 4" />
+                  <circle cx="100" cy="100" r="60" fill="none" stroke="#5CE1E6" stroke-width="1" />
+                  <path d="M 85 100 L 92 90 L 100 90 L 108 80 L 108 120 L 100 110 L 92 110 Z" fill="#FFFFFF" />
+                </svg>
+              </div>
+              <div class="timeline-text-side">
+                <div class="step-num-pill">Stage 05</div>
+                <h3>Text Output</h3>
+                <span class="step-tech-tag">Web Speech Synthesis</span>
+                <p>The synthesized text is projected on the interface and parsed by the browser's native text-to-speech speaker modules. Speech output is spoken aloud instantly, completing the loop from sight to sound.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 7. Live Blink Test Section -->
+      <section id="blink-test" class="content-section">
+        <div class="section-container">
+          <div class="section-header text-center">
+            <h2 class="section-title">Live Blink Test</h2>
+            <p class="section-subtitle">Interact with our real-time translator in your browser. Choose either live camera tracking or manual simulation.</p>
+          </div>
+
+          <div class="dashboard-wrapper">
+            
+            <!-- Dashboard Controls -->
+            <div class="dashboard-controls">
+              <button id="btn-mode-camera" class="dash-mode-btn active"><i data-lucide="video"></i> Webcam Tracking</button>
+              <button id="btn-mode-sim" class="dash-mode-btn"><i data-lucide="cpu"></i> Manual Simulator</button>
+              <button id="btn-toggle-flowchart" class="dash-mode-btn active"><i data-lucide="git-branch"></i> Flowchart Guide</button>
+            </div>
+
+            <div class="dashboard-body flowchart-open">
+              
+              <!-- Left Panel: Webcam Stream / Virtual Face -->
+              <div class="dashboard-panel panel-left">
+                <div class="panel-header">
+                  <span class="status-indicator live" id="camera-status-light"></span> <span id="camera-status-text">CAMERA ACTIVE</span>
+                  <span class="panel-fps" id="tracking-fps">FPS: --</span>
+                </div>
+                
+                <div class="camera-container-box">
+                  
+                  <!-- Live Webcam Screen -->
+                  <div class="camera-screen-view active" id="webcam-view-content">
+                    <video id="webcam-video" autoplay playsinline style="display: none;"></video>
+                    <canvas id="webcam-canvas"></canvas>
+                    <button class="btn-stop-floating" id="btn-stop-webcam-floating" style="display: none;"><i data-lucide="video-off"></i> Stop Webcam</button>
+                    <div class="webcam-prompt-overlay" id="webcam-prompt">
+                      <div class="prompt-icon"><i data-lucide="camera"></i></div>
+                      <h4>Webcam Access Required</h4>
+                      <p>Grant camera access to enable eye tracking.</p>
+                      <button class="btn btn-primary magnetic-btn" id="btn-enable-webcam">Initialize Webcam</button>
+                    </div>
+                  </div>
+                  
+                  <!-- Fallback Virtual Simulator Screen -->
+                  <div class="camera-screen-view" id="sim-view-content">
+                    <div class="sim-eye-stage">
+                      <svg class="sim-eye-svg" viewBox="0 0 200 120">
+                        <path class="sim-eye-lid-upper" d="M 20 60 Q 100 10 180 60" fill="none" stroke="#00E5FF" stroke-width="2.5" />
+                        <path class="sim-eye-lid-lower" d="M 20 60 Q 100 110 180 60" fill="none" stroke="#00E5FF" stroke-width="2.5" />
+                        <circle class="sim-eye-pupil" cx="100" cy="60" r="28" fill="none" stroke="#5CE1E6" stroke-width="2" />
+                        <circle class="sim-eye-pupil-center" cx="100" cy="60" r="10" fill="#00E5FF" />
+                      </svg>
+                      <div class="sim-hint">CLICK & HOLD BUTTON TO SIMULATE BLINK</div>
+                      <div class="sim-control-pad">
+                        <button id="btn-sim-blink" class="btn btn-primary btn-sim-trigger">PRESS & HOLD (BLINK)</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Telemetry overlay -->
+                <div class="panel-telemetry">
+                  <div class="telemetry-row">
+                    <span class="tele-label">EAR (Eye Aspect Ratio):</span>
+                    <span class="tele-value" id="val-ear">0.000</span>
+                  </div>
+                  <div class="telemetry-row">
+                    <span class="tele-label">Active Threshold:</span>
+                    <span class="tele-value" id="val-threshold">0.250</span>
+                  </div>
+                  <div class="telemetry-row calibration-controls" style="display:none;" id="cal-controls-row">
+                    <button class="btn-micro" id="btn-calibrate">Calibrate</button>
+                    <button class="btn-micro btn-micro-stop" id="btn-stop-webcam">Stop Webcam</button>
+                    <span class="cal-status" id="txt-cal-status">Ready</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Middle Panel: Collapsible Interactive Morse Flowchart -->
+              <div class="dashboard-panel panel-flowchart active" id="dashboard-flowchart-panel">
+                <div class="panel-header">
+                  <i data-lucide="git-branch"></i> MORSE DECODING TREE
+                </div>
+                <div class="flowchart-container">
+                  <svg class="flowchart-svg" viewBox="0 0 600 230" id="morse-flowchart-svg">
+                    <!-- Connection Lines (labeled DOT/DASH) -->
+                    <!-- Level 1 Connections -->
+                    <line id="flowchart-line-root-E" class="flowchart-line" x1="300" y1="20" x2="150" y2="65" />
+                    <line id="flowchart-line-root-T" class="flowchart-line" x1="300" y1="20" x2="450" y2="65" />
+                    <!-- Level 2 Connections -->
+                    <line id="flowchart-line-E-I" class="flowchart-line" x1="150" y1="65" x2="75" y2="110" />
+                    <line id="flowchart-line-E-A" class="flowchart-line" x1="150" y1="65" x2="225" y2="110" />
+                    <line id="flowchart-line-T-N" class="flowchart-line" x1="450" y1="65" x2="375" y2="110" />
+                    <line id="flowchart-line-T-M" class="flowchart-line" x1="450" y1="65" x2="525" y2="110" />
+                    <!-- Level 3 Connections -->
+                    <line id="flowchart-line-I-S" class="flowchart-line" x1="75" y1="110" x2="37.5" y2="155" />
+                    <line id="flowchart-line-I-U" class="flowchart-line" x1="75" y1="110" x2="112.5" y2="155" />
+                    <line id="flowchart-line-A-R" class="flowchart-line" x1="225" y1="110" x2="187.5" y2="155" />
+                    <line id="flowchart-line-A-W" class="flowchart-line" x1="225" y1="110" x2="262.5" y2="155" />
+                    <line id="flowchart-line-N-D" class="flowchart-line" x1="375" y1="110" x2="337.5" y2="155" />
+                    <line id="flowchart-line-N-K" class="flowchart-line" x1="375" y1="110" x2="412.5" y2="155" />
+                    <line id="flowchart-line-M-G" class="flowchart-line" x1="525" y1="110" x2="487.5" y2="155" />
+                    <line id="flowchart-line-M-O" class="flowchart-line" x1="525" y1="110" x2="562.5" y2="155" />
+                    <!-- Level 4 Connections -->
+                    <line id="flowchart-line-S-H" class="flowchart-line" x1="37.5" y1="155" x2="18.75" y2="200" />
+                    <line id="flowchart-line-S-V" class="flowchart-line" x1="37.5" y1="155" x2="56.25" y2="200" />
+                    <line id="flowchart-line-U-F" class="flowchart-line" x1="112.5" y1="155" x2="93.75" y2="200" />
+                    <line id="flowchart-line-U-Placeholder4" class="flowchart-line" x1="112.5" y1="155" x2="131.25" y2="200" />
+                    <line id="flowchart-line-R-L" class="flowchart-line" x1="187.5" y1="155" x2="168.75" y2="200" />
+                    <line id="flowchart-line-R-Placeholder6" class="flowchart-line" x1="187.5" y1="155" x2="206.25" y2="200" />
+                    <line id="flowchart-line-W-P" class="flowchart-line" x1="262.5" y1="155" x2="243.75" y2="200" />
+                    <line id="flowchart-line-W-J" class="flowchart-line" x1="262.5" y1="155" x2="281.25" y2="200" />
+                    <line id="flowchart-line-D-B" class="flowchart-line" x1="337.5" y1="155" x2="318.75" y2="200" />
+                    <line id="flowchart-line-D-X" class="flowchart-line" x1="337.5" y1="155" x2="356.25" y2="200" />
+                    <line id="flowchart-line-K-C" class="flowchart-line" x1="412.5" y1="155" x2="393.75" y2="200" />
+                    <line id="flowchart-line-K-Y" class="flowchart-line" x1="412.5" y1="155" x2="431.25" y2="200" />
+                    <line id="flowchart-line-G-Z" class="flowchart-line" x1="487.5" y1="155" x2="468.75" y2="200" />
+                    <line id="flowchart-line-G-Q" class="flowchart-line" x1="487.5" y1="155" x2="506.25" y2="200" />
+                    <line id="flowchart-line-O-Placeholder15" class="flowchart-line" x1="562.5" y1="155" x2="543.75" y2="200" />
+                    <line id="flowchart-line-O-Placeholder16" class="flowchart-line" x1="562.5" y1="155" x2="581.25" y2="200" />
+
+                    <!-- Branch Labels -->
+                    <text class="flowchart-branch-label" x="225" y="36">•</text>
+                    <text class="flowchart-branch-label" x="375" y="36">—</text>
+                    <text class="flowchart-branch-label" x="112" y="80">•</text>
+                    <text class="flowchart-branch-label" x="188" y="80">—</text>
+                    <text class="flowchart-branch-label" x="412" y="80">•</text>
+                    <text class="flowchart-branch-label" x="488" y="80">—</text>
+
+                    <!-- Flowchart Nodes (Representing Letters) -->
+                    <!-- Root node (START) -->
+                    <g id="flowchart-node-root" class="flowchart-node-group">
+                      <circle cx="300" cy="20" r="10" class="flowchart-node-circle root-node-circle" />
+                      <text x="300" y="24" class="flowchart-node-text root-node-text">START</text>
+                    </g>
+                    <!-- Level 1 Nodes -->
+                    <g id="flowchart-node-E" class="flowchart-node-group" data-morse=".">
+                      <circle cx="150" cy="65" r="11" class="flowchart-node-circle" />
+                      <text x="150" y="69" class="flowchart-node-text">E</text>
+                    </g>
+                    <g id="flowchart-node-T" class="flowchart-node-group" data-morse="-">
+                      <circle cx="450" cy="65" r="11" class="flowchart-node-circle" />
+                      <text x="450" y="69" class="flowchart-node-text">T</text>
+                    </g>
+                    <!-- Level 2 Nodes -->
+                    <g id="flowchart-node-I" class="flowchart-node-group" data-morse="..">
+                      <circle cx="75" cy="110" r="10.5" class="flowchart-node-circle" />
+                      <text x="75" y="114" class="flowchart-node-text">I</text>
+                    </g>
+                    <g id="flowchart-node-A" class="flowchart-node-group" data-morse=".-">
+                      <circle cx="225" cy="110" r="10.5" class="flowchart-node-circle" />
+                      <text x="225" y="114" class="flowchart-node-text">A</text>
+                    </g>
+                    <g id="flowchart-node-N" class="flowchart-node-group" data-morse="-.">
+                      <circle cx="375" cy="110" r="10.5" class="flowchart-node-circle" />
+                      <text x="375" y="114" class="flowchart-node-text">N</text>
+                    </g>
+                    <g id="flowchart-node-M" class="flowchart-node-group" data-morse="--">
+                      <circle cx="525" cy="110" r="10.5" class="flowchart-node-circle" />
+                      <text x="525" y="114" class="flowchart-node-text">M</text>
+                    </g>
+                    <!-- Level 3 Nodes -->
+                    <g id="flowchart-node-S" class="flowchart-node-group" data-morse="...">
+                      <circle cx="37.5" cy="155" r="10" class="flowchart-node-circle" />
+                      <text x="37.5" y="158" class="flowchart-node-text">S</text>
+                    </g>
+                    <g id="flowchart-node-U" class="flowchart-node-group" data-morse="..-">
+                      <circle cx="112.5" cy="155" r="10" class="flowchart-node-circle" />
+                      <text x="112.5" y="158" class="flowchart-node-text">U</text>
+                    </g>
+                    <g id="flowchart-node-R" class="flowchart-node-group" data-morse=".-.">
+                      <circle cx="187.5" cy="155" r="10" class="flowchart-node-circle" />
+                      <text x="187.5" y="158" class="flowchart-node-text">R</text>
+                    </g>
+                    <g id="flowchart-node-W" class="flowchart-node-group" data-morse=".--">
+                      <circle cx="262.5" cy="155" r="10" class="flowchart-node-circle" />
+                      <text x="262.5" y="158" class="flowchart-node-text">W</text>
+                    </g>
+                    <g id="flowchart-node-D" class="flowchart-node-group" data-morse="-..">
+                      <circle cx="337.5" cy="155" r="10" class="flowchart-node-circle" />
+                      <text x="337.5" y="158" class="flowchart-node-text">D</text>
+                    </g>
+                    <g id="flowchart-node-K" class="flowchart-node-group" data-morse="-.-">
+                      <circle cx="412.5" cy="155" r="10" class="flowchart-node-circle" />
+                      <text x="412.5" y="158" class="flowchart-node-text">K</text>
+                    </g>
+                    <g id="flowchart-node-G" class="flowchart-node-group" data-morse="--.">
+                      <circle cx="487.5" cy="155" r="10" class="flowchart-node-circle" />
+                      <text x="487.5" y="158" class="flowchart-node-text">G</text>
+                    </g>
+                    <g id="flowchart-node-O" class="flowchart-node-group" data-morse="---">
+                      <circle cx="562.5" cy="155" r="10" class="flowchart-node-circle" />
+                      <text x="562.5" y="158" class="flowchart-node-text">O</text>
+                    </g>
+                    <!-- Level 4 Nodes -->
+                    <g id="flowchart-node-H" class="flowchart-node-group" data-morse="....">
+                      <circle cx="18.75" cy="200" r="9" class="flowchart-node-circle" />
+                      <text x="18.75" y="203" class="flowchart-node-text">H</text>
+                    </g>
+                    <g id="flowchart-node-V" class="flowchart-node-group" data-morse="...-">
+                      <circle cx="56.25" cy="200" r="9" class="flowchart-node-circle" />
+                      <text x="56.25" y="203" class="flowchart-node-text">V</text>
+                    </g>
+                    <g id="flowchart-node-F" class="flowchart-node-group" data-morse="..-.">
+                      <circle cx="93.75" cy="200" r="9" class="flowchart-node-circle" />
+                      <text x="93.75" y="203" class="flowchart-node-text">F</text>
+                    </g>
+                    <g id="flowchart-node-Placeholder4" class="flowchart-node-group" data-morse="..--">
+                      <circle cx="131.25" cy="200" r="2.5" class="flowchart-node-circle placeholder-circle" style="opacity:0.35;" />
+                    </g>
+                    <g id="flowchart-node-L" class="flowchart-node-group" data-morse=".-..">
+                      <circle cx="168.75" cy="200" r="9" class="flowchart-node-circle" />
+                      <text x="168.75" y="203" class="flowchart-node-text">L</text>
+                    </g>
+                    <g id="flowchart-node-Placeholder6" class="flowchart-node-group" data-morse=".-.-">
+                      <circle cx="206.25" cy="200" r="2.5" class="flowchart-node-circle placeholder-circle" style="opacity:0.35;" />
+                    </g>
+                    <g id="flowchart-node-P" class="flowchart-node-group" data-morse=".--.">
+                      <circle cx="243.75" cy="200" r="9" class="flowchart-node-circle" />
+                      <text x="243.75" y="203" class="flowchart-node-text">P</text>
+                    </g>
+                    <g id="flowchart-node-J" class="flowchart-node-group" data-morse=".---">
+                      <circle cx="281.25" cy="200" r="9" class="flowchart-node-circle" />
+                      <text x="281.25" y="203" class="flowchart-node-text">J</text>
+                    </g>
+                    <g id="flowchart-node-B" class="flowchart-node-group" data-morse="-...">
+                      <circle cx="318.75" cy="200" r="9" class="flowchart-node-circle" />
+                      <text x="318.75" y="203" class="flowchart-node-text">B</text>
+                    </g>
+                    <g id="flowchart-node-X" class="flowchart-node-group" data-morse="-..-">
+                      <circle cx="356.25" cy="200" r="9" class="flowchart-node-circle" />
+                      <text x="356.25" y="203" class="flowchart-node-text">X</text>
+                    </g>
+                    <g id="flowchart-node-C" class="flowchart-node-group" data-morse="-.-.">
+                      <circle cx="393.75" cy="200" r="9" class="flowchart-node-circle" />
+                      <text x="393.75" y="203" class="flowchart-node-text">C</text>
+                    </g>
+                    <g id="flowchart-node-Y" class="flowchart-node-group" data-morse="-.--">
+                      <circle cx="431.25" cy="200" r="9" class="flowchart-node-circle" />
+                      <text x="431.25" y="203" class="flowchart-node-text">Y</text>
+                    </g>
+                    <g id="flowchart-node-Z" class="flowchart-node-group" data-morse="--..">
+                      <circle cx="468.75" cy="200" r="9" class="flowchart-node-circle" />
+                      <text x="468.75" y="203" class="flowchart-node-text">Z</text>
+                    </g>
+                    <g id="flowchart-node-Q" class="flowchart-node-group" data-morse="--.-">
+                      <circle cx="506.25" cy="200" r="9" class="flowchart-node-circle" />
+                      <text x="506.25" y="203" class="flowchart-node-text">Q</text>
+                    </g>
+                    <g id="flowchart-node-Placeholder15" class="flowchart-node-group" data-morse="---.">
+                      <circle cx="543.75" cy="200" r="2.5" class="flowchart-node-circle placeholder-circle" style="opacity:0.35;" />
+                    </g>
+                    <g id="flowchart-node-Placeholder16" class="flowchart-node-group" data-morse="----">
+                      <circle cx="581.25" cy="200" r="2.5" class="flowchart-node-circle placeholder-circle" style="opacity:0.35;" />
+                    </g>
+                  </svg>
+                  <div class="flowchart-hint">The active path lights up dynamically as you blink.</div>
+                </div>
+              </div>
+
+              <!-- Right Panel: Morse Stream & Output -->
+              <div class="dashboard-panel panel-right">
+                <div class="panel-header">
+                  <i data-lucide="terminal"></i> MORSE CODE TRANSLATION
+                </div>
+                
+                <div class="translation-console">
+                  <div class="console-section">
+                    <div class="console-label">Current Morse <span class="sub-label">(Live dots & dashes)</span></div>
+                    <div class="console-display display-morse" id="display-morse-buffer">Ready</div>
+                  </div>
+                  
+                  <div class="console-section">
+                    <div class="console-label">Decoded Message <span class="sub-label">(English translation)</span></div>
+                    <div class="console-display display-text" id="display-text-output">HELLO</div>
+                  </div>
+                  
+                  <div class="console-section">
+                    <div class="console-label">Speech Queue & Log Feed</div>
+                    <div class="console-log-box" id="console-logs">
+                      <p class="log-line">[SYSTEM] Initialized BlinkMorse Engine v1.0.0</p>
+                      <p class="log-line">[SYSTEM] Waiting for video input or simulation triggers...</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="panel-actions">
+                  <button class="btn btn-secondary btn-icon" id="btn-tts-speak">
+                    <i data-lucide="volume-2"></i> Speak Text
+                  </button>
+                  <button class="btn btn-tertiary btn-icon" id="btn-clear-letter">
+                    <i data-lucide="delete"></i> Delete Letter
+                  </button>
+                  <button class="btn btn-tertiary btn-icon" id="btn-clear-all">
+                    <i data-lucide="trash-2"></i> Clear Simulator
+                  </button>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 8. BlinkMorse Intelligence Metrics Section -->
+      <section id="metrics" class="content-section">
+        <div class="section-container">
+          <div class="section-header text-center">
+            <span class="label-accent">PERFORMANCE VALIDATION</span>
+            <h2 class="section-title">BlinkMorse Intelligence Metrics</h2>
+            <p class="section-subtitle">Trained on blink image patterns and evaluated on 600 unseen samples.</p>
+          </div>
+
+          <!-- Gauges Grid -->
+          <div class="gauges-grid">
+            <!-- Gauge 1: Accuracy -->
+            <div class="gauge-container card-metric" id="metric-accuracy">
+              <div class="gauge-svg-box">
+                <svg viewBox="0 0 240 240" class="gauge-circle-svg">
+                  <circle class="gauge-bg-ring" cx="120" cy="120" r="105" fill="none" stroke="rgba(255, 255, 255, 0.06)" stroke-width="14" />
+                  <circle class="gauge-active-ring" cx="120" cy="120" r="105" fill="none" stroke="#00E5FF" stroke-width="14" stroke-linecap="round" stroke-dasharray="660" stroke-dashoffset="660" />
+                </svg>
+                <div class="gauge-counter-text"><span class="counter-val" data-target="97.67">0</span>%</div>
+              </div>
+              <div class="gauge-label">Accuracy</div>
+            </div>
+
+            <!-- Gauge 2: Precision -->
+            <div class="gauge-container card-metric" id="metric-precision">
+              <div class="gauge-svg-box">
+                <svg viewBox="0 0 240 240" class="gauge-circle-svg">
+                  <circle class="gauge-bg-ring" cx="120" cy="120" r="105" fill="none" stroke="rgba(255, 255, 255, 0.06)" stroke-width="14" />
+                  <circle class="gauge-active-ring" cx="120" cy="120" r="105" fill="none" stroke="#00E5FF" stroke-width="14" stroke-linecap="round" stroke-dasharray="660" stroke-dashoffset="660" />
+                </svg>
+                <div class="gauge-counter-text"><span class="counter-val" data-target="97.27">0</span>%</div>
+              </div>
+              <div class="gauge-label">Precision</div>
+            </div>
+
+            <!-- Gauge 3: Recall -->
+            <div class="gauge-container card-metric" id="metric-recall">
+              <div class="gauge-svg-box">
+                <svg viewBox="0 0 240 240" class="gauge-circle-svg">
+                  <circle class="gauge-bg-ring" cx="120" cy="120" r="105" fill="none" stroke="rgba(255, 255, 255, 0.06)" stroke-width="14" />
+                  <circle class="gauge-active-ring" cx="120" cy="120" r="105" fill="none" stroke="#00E5FF" stroke-width="14" stroke-linecap="round" stroke-dasharray="660" stroke-dashoffset="660" />
+                </svg>
+                <div class="gauge-counter-text"><span class="counter-val" data-target="98.89">0</span>%</div>
+              </div>
+              <div class="gauge-label">Recall</div>
+            </div>
+
+            <!-- Gauge 4: F1 Score -->
+            <div class="gauge-container card-metric" id="metric-f1">
+              <div class="gauge-svg-box">
+                <svg viewBox="0 0 240 240" class="gauge-circle-svg">
+                  <circle class="gauge-bg-ring" cx="120" cy="120" r="105" fill="none" stroke="rgba(255, 255, 255, 0.06)" stroke-width="14" />
+                  <circle class="gauge-active-ring" cx="120" cy="120" r="105" fill="none" stroke="#00E5FF" stroke-width="14" stroke-linecap="round" stroke-dasharray="660" stroke-dashoffset="660" />
+                </svg>
+                <div class="gauge-counter-text"><span class="counter-val" data-target="98.07">0</span>%</div>
+              </div>
+              <div class="gauge-label">F1 Score</div>
+            </div>
+          </div>
+
+          <!-- Horizontal Progress Bar for ROC-AUC -->
+          <div class="roc-auc-bar-container card-metric" id="metric-roc-auc">
+            <div class="roc-auc-header">
+              <div class="roc-auc-label-title">ROC–AUC: <span class="counter-val-raw" data-target="0.9991">0.0000</span></div>
+              <div class="roc-auc-badge">Exceptional Separation Capability</div>
+            </div>
+            <div class="roc-auc-progress-track">
+              <div class="roc-auc-progress-fill" style="width: 0%;"></div>
+            </div>
+          </div>
+
+          <!-- Model Evaluation and Dataset Insights Lists -->
+          <div class="metrics-details-grid">
+            <div class="metrics-details-column">
+              <h4>MODEL EVALUATION</h4>
+              <div class="detail-stat-row">
+                <span class="detail-label">Accuracy</span>
+                <span class="detail-value">97.67%</span>
+              </div>
+              <div class="detail-stat-row">
+                <span class="detail-label">Precision</span>
+                <span class="detail-value">97.27%</span>
+              </div>
+              <div class="detail-stat-row">
+                <span class="detail-label">Recall</span>
+                <span class="detail-value">98.89%</span>
+              </div>
+              <div class="detail-stat-row">
+                <span class="detail-label">F1 Score</span>
+                <span class="detail-value">98.07%</span>
+              </div>
+              <div class="detail-stat-row">
+                <span class="detail-label">ROC–AUC</span>
+                <span class="detail-value">0.9991</span>
+              </div>
+            </div>
+
+            <div class="metrics-details-column">
+              <h4>DATASET INSIGHTS</h4>
+              <div class="detail-stat-row">
+                <span class="detail-label">Test Samples</span>
+                <span class="detail-value text-glow-cyan"><span class="insight-counter" data-target="600">0</span></span>
+              </div>
+              <div class="detail-stat-row">
+                <span class="detail-label">Closed Eyes</span>
+                <span class="detail-value text-glow-cyan"><span class="insight-counter" data-target="240">0</span></span>
+              </div>
+              <div class="detail-stat-row">
+                <span class="detail-label">Open Eyes</span>
+                <span class="detail-value text-glow-cyan"><span class="insight-counter" data-target="360">0</span></span>
+              </div>
+              <div class="detail-stat-row">
+                <span class="detail-label">Input Resolution</span>
+                <span class="detail-value">64×64 Grayscale</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- 9. Real-Time Performance Section -->
+      <section id="real-time" class="content-section">
+        <div class="section-container">
+          <div class="section-header text-center">
+            <span class="label-accent">HARDWARE TELEMETRY</span>
+            <h2 class="section-title">Real-Time Processing</h2>
+            <p class="section-subtitle">Ultra-low computational overhead running directly on consumer-grade environments.</p>
+          </div>
+
+          <div class="real-time-grid">
+            <!-- Card 1: Throughput -->
+            <div class="real-time-card card-metric">
+              <div class="rt-icon"><i data-lucide="gauge"></i></div>
+              <div class="rt-number"><span class="rt-counter" data-target="25">0</span> FPS</div>
+              <h3>Throughput</h3>
+              <p>Maintains consistent rendering cycles directly in standard browser threads, eliminating cloud delay.</p>
+            </div>
+
+            <!-- Card 2: Translation Delay -->
+            <div class="real-time-card card-metric">
+              <div class="rt-icon"><i data-lucide="zap"></i></div>
+              <div class="rt-number"><span class="rt-counter" data-target="4">0</span> ms</div>
+              <h3>Translation Delay</h3>
+              <p>Average calculation latency per frame, ensuring instant recognition of dot and dash intervals.</p>
+            </div>
+
+            <!-- Card 3: Hardware Support -->
+            <div class="real-time-card rt-pulsing-card">
+              <div class="rt-icon pulse-animation"><i data-lucide="cpu"></i></div>
+              <div class="rt-label-text">Intel i3 Compatible</div>
+              <h3>Hardware Support</h3>
+              <p>Designed for low-compute devices, enabling accessibility options on low-cost hardware.</p>
+            </div>
+
+            <!-- Card 4: Camera Support -->
+            <div class="real-time-card rt-glowing-card">
+              <div class="rt-icon glow-animation"><i data-lucide="webcam"></i></div>
+              <div class="rt-label-text">Standard HD Webcam</div>
+              <h3>Camera Support</h3>
+              <p>Operates using any normal integrated camera, bypassing the need for infrared gaze tracking.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 10. Technology Stack Section -->
+      <section id="tech-core" class="content-section">
+        <div class="section-container">
+          <div class="section-header text-center">
+            <span class="label-accent">ARCHITECTURE</span>
+            <h2 class="section-title">Technology Stack</h2>
+            <p class="section-subtitle">An integrated network of mathematical models and modern web animation APIs.</p>
+          </div>
+
+          <div class="tech-canvas-container">
+            <canvas id="tech-network-canvas"></canvas>
+            <div class="tech-nodes-overlay">
+              <div class="tech-node core-node" id="node-core">
+                <div class="node-glow"></div>
+                <div class="node-label">BLINKMORSE CORE</div>
+              </div>
+              
+              <!-- Research Stack Nodes (Light Nodes) -->
+              <div class="tech-node child-node research-node" id="node-python" data-desc="Python: Core language used for model training and preprocessing.">Python</div>
+              <div class="tech-node child-node research-node" id="node-opencv" data-desc="OpenCV: Handles computer vision capture and image matrix transformations.">OpenCV</div>
+              <div class="tech-node child-node research-node" id="node-dlib" data-desc="dlib: Deploys 68-point facial mapping models for landmark calculations.">dlib</div>
+              <div class="tech-node child-node research-node" id="node-numpy" data-desc="NumPy: Calculates vector coordinates and Eye Aspect Ratio coordinates.">NumPy</div>
+              <div class="tech-node child-node research-node" id="node-svm" data-desc="Linear SVM: Classifier core trained to separate blink states.">Linear SVM</div>
+              <div class="tech-node child-node research-node" id="node-pickle" data-desc="pickle: Serializes and archives model configurations.">pickle</div>
+              <div class="tech-node child-node research-node" id="node-joblib" data-desc="joblib: Restores and deploys compiled training weights.">joblib</div>
+              <div class="tech-node child-node research-node" id="node-vscode" data-desc="VS Code: Codebase development environment.">VS Code</div>
+              <div class="tech-node child-node research-node" id="node-webcam" data-desc="Standard Webcam: Capture peripheral hardware.">Standard Webcam</div>
+
+              <!-- Interactive Demo Stack Nodes (Electric Cyan Nodes) -->
+              <div class="tech-node child-node demo-node" id="node-mediapipe" data-desc="MediaPipe FaceMesh: Tracks landmarks in browser threads client-side.">MediaPipe</div>
+              <div class="tech-node child-node demo-node" id="node-js" data-desc="JavaScript: Orchestrates client-side translation and UI updates.">JavaScript</div>
+              <div class="tech-node child-node demo-node" id="node-gsap" data-desc="GSAP: Deploys GPU-accelerated micro-animations.">GSAP</div>
+              <div class="tech-node child-node demo-node" id="node-lenis" data-desc="Lenis: Smooth scrolling engine.">Lenis</div>
+              <div class="tech-node child-node demo-node" id="node-speech" data-desc="Web Speech API: Deploys SpeechSynthesis speech output modules.">Web Speech API</div>
+            </div>
+            <div class="tech-details-box" id="tech-details-desc">
+              Hover over any technology node to explore its role in the BlinkMorse system.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 11. Research Timeline Section -->
+      <section id="timeline" class="content-section">
+        <div class="section-container">
+          <div class="section-header text-center">
+            <span class="label-accent">METHODOLOGY</span>
+            <h2 class="section-title">Research & Development Timeline</h2>
+            <p class="section-subtitle">A linear review of the model evaluation results and pipeline testing parameters.</p>
+          </div>
+
+          <div class="vertical-timeline">
+            
+            <div class="timeline-item">
+              <div class="timeline-dot"></div>
+              <div class="timeline-content">
+                <span class="timeline-date">Phase 1</span>
+                <h3>Dataset Preparation</h3>
+                <h4 class="timeline-stat">600 Test Samples</h4>
+                <p>We established a dataset consisting of Open Eyes and Closed Eyes configurations. Pre-processing steps downsampled inputs to 64×64 grayscale formats, compiling them as flattened numerical feature vectors.</p>
+              </div>
+            </div>
+
+            <div class="timeline-item">
+              <div class="timeline-dot"></div>
+              <div class="timeline-content">
+                <span class="timeline-date">Phase 2</span>
+                <h3>Face & Eye Detection</h3>
+                <h4 class="timeline-stat">68-Point Facial Landmarks</h4>
+                <p>Ocular locations are scanned in real-time. The system deploys dlib grids combined with OpenCV frame capture to isolate regional eyelid parameters and coordinate vectors.</p>
+              </div>
+            </div>
+
+            <div class="timeline-item">
+              <div class="timeline-dot"></div>
+              <div class="timeline-content">
+                <span class="timeline-date">Phase 3</span>
+                <h3>Blink Classification</h3>
+                <h4 class="timeline-stat">Linear Support Vector Machine</h4>
+                <p>A Linear SVM separates blinking and open-eye feature subsets. This model is exported using pickle and joblib modules for resource-efficient deployment.</p>
+              </div>
+            </div>
+
+            <div class="timeline-item">
+              <div class="timeline-dot"></div>
+              <div class="timeline-content">
+                <span class="timeline-date">Phase 4</span>
+                <h3>Model Evaluation</h3>
+                <h4 class="timeline-stat">97.67% Accuracy</h4>
+                <p>During testing across 600 samples (360 open / 240 closed), the SVM demonstrated an accuracy of 97.67%, a precision of 97.27%, recall of 98.89%, and an F1 score of 98.07%. The ROC–AUC reached 0.9991, with only 10 False Positives and 4 False Negatives.</p>
+              </div>
+            </div>
+
+            <div class="timeline-item">
+              <div class="timeline-dot"></div>
+              <div class="timeline-content">
+                <span class="timeline-date">Phase 5</span>
+                <h3>Morse Translation</h3>
+                <h4 class="timeline-stat">Dictionary-based Lookup</h4>
+                <p>Binary pulse outputs translate straight to characters. The decoder parses dot and dash sequences using search trees mapped from key mappings, outputting correct English sentences.</p>
+              </div>
+            </div>
+
+            <div class="timeline-item">
+              <div class="timeline-dot"></div>
+              <div class="timeline-content">
+                <span class="timeline-date">Phase 6</span>
+                <h3>Future Scope</h3>
+                <h4 class="timeline-stat">Multimodal Expansion</h4>
+                <p>Future development phases plan for deep learning integration (CNN/LSTMs), bluetooth integration for active wheelchair systems, custom user-specific thresholds calibration, and voice synthesis extensions.</p>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+
+
+
+
+      <!-- 14. Built By Section -->
+      <section id="built-by" class="content-section">
+        <div class="section-container narrow-container">
+          <div class="developer-showcase-box">
+            <span class="label-accent">BUILT BY</span>
+            <h2 class="dev-name">Jashwanth Kumar G</h2>
+            <p class="dev-title">Artificial Intelligence & Machine Learning Engineer</p>
+            
+            <div class="specialization-box">
+              <h3>Specializing in</h3>
+              <ul class="specialization-list">
+                <li><span class="tag-bullet">•</span> Computer Vision</li>
+                <li><span class="tag-bullet">•</span> Accessibility AI</li>
+                <li><span class="tag-bullet">•</span> Human Computer Interaction</li>
+              </ul>
+            </div>
+
+            <div class="developer-links">
+              <a href="https://github.com/Jashwanth0533R" target="_blank" rel="noopener" class="dev-link magnetic-btn">
+                <i data-lucide="github"></i> GitHub
+              </a>
+              <a href="https://www.linkedin.com/in/jashwanth-kumar-g-431477383/" target="_blank" rel="noopener" class="dev-link magnetic-btn">
+                <i data-lucide="linkedin"></i> LinkedIn
+              </a>
+              <a href="mailto:gjashwanthkumar711@gmail.com" class="dev-link magnetic-btn">
+                <i data-lucide="mail"></i> Email
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 15. System Status Footer -->
+      <footer class="system-footer">
+        
+        <!-- Infinite Scrolling Morse Marquee -->
+        <div class="morse-marquee-container">
+          <div class="marquee-track">
+            <span class="marquee-content">
+              • — • • &nbsp;&nbsp;&nbsp; — — — &nbsp;&nbsp;&nbsp; • • • &nbsp;&nbsp;&nbsp; • — • &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+              • — • • &nbsp;&nbsp;&nbsp; — — — &nbsp;&nbsp;&nbsp; • • • &nbsp;&nbsp;&nbsp; • — • &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+              • — • • &nbsp;&nbsp;&nbsp; — — — &nbsp;&nbsp;&nbsp; • • • &nbsp;&nbsp;&nbsp; • — • &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+              • — • • &nbsp;&nbsp;&nbsp; — — — &nbsp;&nbsp;&nbsp; • • • &nbsp;&nbsp;&nbsp; • — • &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+              • — • • &nbsp;&nbsp;&nbsp; — — — &nbsp;&nbsp;&nbsp; • • • &nbsp;&nbsp;&nbsp; • — • &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            </span>
+            <span class="marquee-content">
+              • — • • &nbsp;&nbsp;&nbsp; — — — &nbsp;&nbsp;&nbsp; • • • &nbsp;&nbsp;&nbsp; • — • &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+              • — • • &nbsp;&nbsp;&nbsp; — — — &nbsp;&nbsp;&nbsp; • • • &nbsp;&nbsp;&nbsp; • — • &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+              • — • • &nbsp;&nbsp;&nbsp; — — — &nbsp;&nbsp;&nbsp; • • • &nbsp;&nbsp;&nbsp; • — • &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+              • — • • &nbsp;&nbsp;&nbsp; — — — &nbsp;&nbsp;&nbsp; • • • &nbsp;&nbsp;&nbsp; • — • &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+              • — • • &nbsp;&nbsp;&nbsp; — — — &nbsp;&nbsp;&nbsp; • • • &nbsp;&nbsp;&nbsp; • — • &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            </span>
+          </div>
+        </div>
+
+        <div class="footer-grid-container">
+          <div class="status-panel">
+            <span class="status-label">SYSTEM STATUS:</span>
+            <div class="status-item">
+              <span class="status-name">Vision Module</span>
+              <span class="status-badge online">ONLINE</span>
+            </div>
+            <div class="status-item">
+              <span class="status-name">Blink Recognition</span>
+              <span class="status-badge online">ONLINE</span>
+            </div>
+            <div class="status-item">
+              <span class="status-name">Morse Decoder</span>
+              <span class="status-badge online">ONLINE</span>
+            </div>
+            <div class="status-item">
+              <span class="status-name">Speech Synthesis</span>
+              <span class="status-badge online">ONLINE</span>
+            </div>
+          </div>
+
+          <div class="footer-meta-info">
+            <p class="footer-philosophy">Built with Vision, Intelligence and Accessibility.</p>
+            <p class="footer-copyright">&copy; 2026 BlinkMorse. All rights reserved.</p>
+          </div>
+        </div>
+      </footer>
+
+    </div> <!-- End wwdc-wrapper -->
+
+  </div> <!-- End scroll-wrapper -->
+
+  <!-- Application JS Code -->
+  <script src="app.js"></script>
+</body>
+</html>

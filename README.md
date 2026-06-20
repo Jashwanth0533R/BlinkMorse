@@ -1,326 +1,267 @@
-# 👁️ Eye Blink Morse Code Translator
+# 👁️ BlinkMorse – Eye Blink Morse Code Translator
+
+<p align="center">
 
 ![Python](https://img.shields.io/badge/Python-3.12-blue?logo=python)
 ![OpenCV](https://img.shields.io/badge/OpenCV-Computer%20Vision-green?logo=opencv)
-![Machine Learning](https://img.shields.io/badge/Machine-Learning-orange)
+![MediaPipe](https://img.shields.io/badge/MediaPipe-FaceMesh-orange)
 ![Dlib](https://img.shields.io/badge/Dlib-Facial%20Landmarks-red)
-![Scikit-Learn](https://img.shields.io/badge/Scikit--Learn-ML-yellow?logo=scikitlearn)
+![Scikit-Learn](https://img.shields.io/badge/Scikit--Learn-SVM-yellow?logo=scikitlearn)
 ![Status](https://img.shields.io/badge/Status-Completed-success)
-![License](https://img.shields.io/badge/License-Academic-lightgrey)
+
+</p>
 
 ---
 
-## 📌 Project Overview
+# 🌐 Live Demo
 
-This project presents an AI-powered Eye Blink Morse Code Translator system that enables hands-free communication using eye blinks detected through a webcam.
+### Product Showcase Website
 
-The system uses:
+### https://blink-morse-sage.vercel.app/
 
-- Computer Vision
-- Facial Landmark Detection
-- Machine Learning
-- Real-Time Blink Detection
-- Morse Code Translation
+Experience BlinkMorse through an interactive product showcase featuring:
 
-The application detects eye blinks in real time, classifies them using a trained Machine Learning model, and converts blink sequences into Morse code patterns and readable text.
-
-This project is designed for accessibility-focused communication systems and Human-Computer Interaction applications.
-
----
-
-## 🚀 Key Features
-
-- 👁️ Real-Time Eye Blink Detection
-- 🤖 Machine Learning-Based Blink Classification
-- 📷 Webcam-Based Face Tracking
-- 🧠 Morse Code Translation
-- 🔍 Facial Landmark Detection using Dlib
-- ⚡ Real-Time Prediction System
-- 🖥️ OpenCV Visualization
-- ♿ Accessibility-Oriented Communication System
+* MediaPipe FaceMesh powered blink visualization
+* Live Blink Testing
+* Morse Code Simulator
+* Speech Synthesis
+* Animated Workflow Timeline
+* Interactive Model Metrics Dashboard
+* Apple-inspired cinematic transitions
 
 ---
 
-## 🧠 Machine Learning Model
+# 📌 Project Overview
 
-### Algorithm Used
-- Support Vector Machine (SVM)
+BlinkMorse is an accessibility-focused Human Computer Interaction system that enables hands-free communication using eye blinks.
 
-### Libraries Used
-- Scikit-learn
-- NumPy
-- OpenCV
-- Dlib
+The project combines Computer Vision, Machine Learning and Morse Code translation to transform voluntary eye movements into meaningful text.
 
-### Model Files
-- `blink_classifier_model.pkl`
-- `shape_predictor_68_face_landmarks.dat`
+BlinkMorse aims to provide an alternative communication mechanism for individuals affected by:
 
----
-
-## 🔎 System Workflow
-
-1. Webcam captures live video stream
-2. Face detection is performed using Dlib
-3. Eye landmarks are extracted
-4. Eye regions are processed and resized
-5. Machine Learning model predicts eye state
-6. Blink sequences are detected
-7. Morse code patterns are generated
-8. Morse sequences are converted into readable text
+* ALS
+* Locked-in Syndrome
+* Speech Disorders
+* Post-Surgery Recovery
+* Temporary Speech Loss
+* Motor Disabilities
 
 ---
 
-## 🏗️ Technology Stack
+# 🚀 Key Features
 
-### Programming Language
-- Python 3.12
+### 👁️ Eye Blink Detection
 
-### Computer Vision
-- OpenCV
-- Dlib
+Real-time blink detection using facial landmarks and eye state classification.
 
-### Machine Learning
-- Scikit-learn
-- NumPy
-- Joblib
+### 🤖 Machine Learning Classification
 
-### Backend Logic
-- Python
+Support Vector Machine based binary eye-state classifier.
 
-### Tools
-- VS Code
-- GitHub
+### 🔤 Morse Translation
+
+Converts blink sequences into Morse symbols and readable text.
+
+### 🧠 Interactive Browser Demonstration
+
+MediaPipe powered browser-based blink testing system.
+
+### 🔊 Speech Synthesis
+
+Web Speech API support for reading translated messages aloud.
+
+### 📊 Intelligence Dashboard
+
+Animated gauges displaying evaluated machine learning metrics.
 
 ---
 
-## 📂 Project Structure
+# 🧠 Model Performance
+
+| Metric    | Value      |
+| --------- | ---------- |
+| Accuracy  | **97.67%** |
+| Precision | **97.27%** |
+| Recall    | **98.89%** |
+| F1 Score  | **98.07%** |
+| ROC–AUC   | **0.9991** |
+
+### Evaluation Dataset
+
+Test Samples
+
+600
+
+Closed Eye Samples
+
+240
+
+Open Eye Samples
+
+360
+
+Confusion Matrix
+
+```text
+[[230 10]
+
+ [ 4 356]]
+```
+
+---
+
+# 🔎 System Workflow
+
+1. Webcam captures video stream
+
+2. Face detection performed using Dlib
+
+3. Eye landmarks extracted
+
+4. Eye regions resized to 64×64 grayscale images
+
+5. Linear SVM predicts eye state
+
+6. Blink duration analysed
+
+7. Morse symbols generated
+
+8. Morse sequence translated into text
+
+9. Speech synthesis outputs decoded message
+
+---
+
+# 🏗️ Technology Stack
+
+## Research Stack
+
+* Python 3.12
+
+* OpenCV
+
+* Dlib
+
+* NumPy
+
+* Linear SVM
+
+* Joblib
+
+* Pickle
+
+* VS Code
+
+## Interactive Demo Stack
+
+* MediaPipe FaceMesh
+
+* JavaScript
+
+* GSAP
+
+* Lenis
+
+* Web Speech API
+
+---
+
+# 📂 Project Structure
 
 ```bash
 BlinkMorse/
-│
-├── main.py
-├── train_model.py
-├── requirements.txt
-├── README.md
-│
-├── models/
-│   ├── blink_classifier_model.pkl
-│   └── shape_predictor_68_face_landmarks.dat
-│
+
 ├── dataset/
-│   ├── open_eyes/
-│   └── closed_eyes/
-│
-├── static/
-│
-└── outputs/
+
+├── demo_website/
+
+│ ├── index.html
+
+│ ├── styles.css
+
+│ ├── app.js
+
+│ └── assets/
+
+
+├── models/
+
+│ ├── blink_classifier_model.pkl
+
+│ ├── shape_predictor_68_face_landmarks.dat
+
+│ ├── X_train.npy
+
+│ ├── X_test.npy
+
+│ ├── y_train.npy
+
+│ └── y_test.npy
+
+
+├── scripts/
+
+│ ├── blink_detection.py
+
+│ ├── dataset_preperation.py
+
+│ ├── morse_translator.py
+
+│ └── train_model.py
+
+
+└── README.md
+
 ```
 
 ---
 
-## 📥 Dataset Information
+# 🌱 Future Scope
 
-The dataset used for training the blink detection model is **not included** in this repository due to repository size limitations.
+* Deep Learning based Blink Classification
 
-Users need to create their own dataset for training.
+* User-specific calibration
 
-### Required Dataset Structure
+* Predictive text generation
 
-```bash
-dataset/
-│
-├── open_eyes/
-│   ├── image1.jpg
-│   ├── image2.jpg
-│   └── ...
-│
-└── closed_eyes/
-    ├── image1.jpg
-    ├── image2.jpg
-    └── ...
-```
+* Sentence completion
 
-### Dataset Requirements
+* Bluetooth communication
 
-- Webcam eye images
-- Open eye samples
-- Closed eye samples
-- Grayscale preferred
-- Consistent image size recommended
+* Multimodal interaction
+
+* Mobile companion application
 
 ---
 
-## 📥 Required Model Files
+# 👨‍💻 Author
 
-This project requires the following model files:
+### Jashwanth Kumar G
 
-### 1️⃣ Dlib Facial Landmark Model
+Artificial Intelligence & Machine Learning Engineer
 
-Download:
+📧 [gjashwanthkumar711@gmail.com](mailto:gjashwanthkumar711@gmail.com)
 
-```text
-http://dlib.net/files/shape_predictor_68_face_landmarks.dat.bz2
-```
+🔗 GitHub
 
-Extract and place:
-
-```bash
-models/shape_predictor_68_face_landmarks.dat
-```
-
----
-
-### 2️⃣ Blink Classification Model
-
-Train your own model using:
-
-```bash
-train_model.py
-```
-
-Generated model:
-
-```bash
-models/blink_classifier_model.pkl
-```
-
----
-
-## ⚙️ Local Setup Instructions
-
-### 1️⃣ Clone Repository
-
-```bash
-git clone https://github.com/Jashwanth0533R/BlinkMorse.git
-
-cd BlinkMorse
-```
-
----
-
-### 2️⃣ Create Virtual Environment
-
-```bash
-python -m venv venv
-```
-
-Activate Environment:
-
-### Windows
-
-```bash
-venv\Scripts\activate
-```
-
-### Linux / Mac
-
-```bash
-source venv/bin/activate
-```
-
----
-
-### 3️⃣ Install Dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
----
-
-### 4️⃣ Run Application
-
-```bash
-python main.py
-```
-
----
-
-## ▶️ Expected Output
-
-- Webcam window opens
-- Face gets detected
-- Eye landmarks are tracked
-- Blink detection runs in real time
-- Morse code patterns are generated
-
-Press:
-
-```text
-q
-```
-
-to quit the application.
-
----
-
-## 🔐 Model Training
-
-To train the blink detection model:
-
-```bash
-python train_model.py
-```
-
-The trained model will be saved as:
-
-```bash
-models/blink_classifier_model.pkl
-```
-
----
-
-## 📊 Future Enhancements
-
-- Deep Learning-Based Blink Detection
-- LSTM-Based Morse Sequence Recognition
-- Speech Output System
-- Sentence Prediction
-- Mobile Application Integration
-- Voice Assistant Integration
-- Eye Gesture Commands
-- Real-Time Text-to-Speech
-
----
-
-## 💡 Learning Outcomes
-
-Through this project, I gained practical experience in:
-
-- Computer Vision
-- Facial Landmark Detection
-- Machine Learning Model Training
-- Real-Time Video Processing
-- Human-Computer Interaction
-- Accessibility-Based AI Systems
-- OpenCV Applications
-
----
-
-## 👨‍💻 Author
-
-### Jashwanth Kumar Gutta
-
-AI & ML Student | Machine Learning Enthusiast | Backend Developer
-
-📧 Email:  
-gjashwanthkumar711@gmail.com
-
-🔗 GitHub:  
 https://github.com/Jashwanth0533R
 
-🔗 LinkedIn:  
+🔗 LinkedIn
+
 https://www.linkedin.com/in/jashwanth-kumar-g-431477383/
 
 ---
 
-## ⭐ Support
+# ⭐ Support
 
-If you found this project useful, consider giving it a ⭐ on GitHub.
+If you found BlinkMorse useful,
+
+please consider giving the repository a ⭐ on GitHub.
 
 ---
 
-## 📜 License
+# 📜 License
 
-Developed for educational and academic purposes only.
+Developed for academic and educational purposes.
+
+© 2026 Jashwanth Kumar G
